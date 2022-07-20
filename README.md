@@ -1,4 +1,4 @@
-# pos-vue
+# pos-tauri
 
 ## Project setup
 ```
