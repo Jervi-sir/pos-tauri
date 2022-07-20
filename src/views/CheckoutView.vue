@@ -86,17 +86,18 @@
                 </button>
             </div>
         </div>
+        <div class="popup-container" v-show="popup.payment">
+            <div class="popup-layer" >
+            </div>
+            <div class="popup" >
+                <img src="../../public/img/success.svg" alt="">
+                <h2>Payment Successful</h2>
+                <p>orders successfully processed, and saved in the database</p>
+                <a href="#" @click="reloadPage" class="new-order">New Orders!</a>
+            </div>
+        </div>
     </main>
-    <div v-show="popup.payment">
-        <div class="popup-layer" >
-        </div>
-        <div class="popup" >
-            <img src="../../public/img/success.svg" alt="">
-            <h2>Payment Successful</h2>
-            <p>orders successfully processed, and saved in the database</p>
-            <a href="#" @click="reloadPage" class="new-order">New Orders!</a>
-        </div>
-    </div>
+    
 </template>
 
 <style lang="scss">
@@ -105,14 +106,15 @@
 
 <script>
 // @ is an alias to /src
+import SQLite from 'tauri-plugin-sqlite-api'
 import json from '../../public/database.json'
+import { priceFormat, calSale, calOriginal } from '../functions/helper'
 export default {
-    
- 
     data () {
         return {
+            db: '',
             keyword: '',
-            products: json,
+            products: [],
             checkouts: [],
             pay: {
                 original: 0,
@@ -123,6 +125,30 @@ export default {
                 payment: false
             }
         }
+    },
+    async mounted() {
+        this.db = await SQLite.open('./database.db');
+        const rows = await this.db.select(
+            'SELECT * FROM products'
+        )
+        rows.forEach(item => {
+            var temp = {
+                "details":{
+                    "barcode": item.barcode,
+                    "name": item.name,
+                    "model": item.model
+                },
+                "price": {
+                    "original": item.price_original,
+                    "sale": item.price_sale
+                },
+                "quantity": {
+                    "amount": item.quantity_amount,
+                    "status": item.quantity_status
+                }
+            }
+            this.products.push(temp);
+        });
     },
     watch: {
         checkouts: {
@@ -140,28 +166,26 @@ export default {
             window.location.reload();
         },
         processPayment () { 
-            this.popup.payment = true;
+            this.checkouts.forEach( item => {
+                this.getData(item).then(result => {console.log(result)})
+            })
+            //this.popup.payment = true;
+        },
+        async getData(item) {
+            const row = await this.db.select(
+                'UPDATE products SET quantity_amount = (?1) WHERE barcode = (?2)',
+                [item.quantity.amount, item.details.barcode]
+                )
+            return row;
         },
         priceFormat(price) {
-            var formatter = new Intl.NumberFormat('ar-DZ', {
-                    style: 'currency',
-                    currency: 'DZD',
-                });
-            return formatter.format(price); 
+            return priceFormat(price);
         },
-        calSale () { 
-            var saleTotal = 0;
-            this.checkouts.forEach(item => {
-                saleTotal += (item.price.sale * item.quantity.ordered);
-            })
-            return saleTotal ;
+        calSale() { 
+            return calSale(this.checkouts) ;
         },
         calOriginal () { 
-            var originalTotal = 0;
-            this.checkouts.forEach(item => {
-                originalTotal += (item.price.original * item.quantity.ordered);
-            })
-            return originalTotal ;
+            return calOriginal(this.checkouts) ;
         },
         deleteFromCheckout (index) { 
             this.checkouts[index].quantity.amount += this.checkouts[index].quantity.ordered;
@@ -173,22 +197,18 @@ export default {
                 this.checkouts[index].quantity.amount--;
                 this.checkouts[index].quantity.ordered++;
            }
-            //console.log(this.checkouts[index].quantity.amount);
         },
         removeQtn(index) { 
            var available = this.checkouts[index].quantity.amount;
            var maxQtb = this.checkouts[index].quantity.maxQtb;
-
            if(available != maxQtb) {
                 this.checkouts[index].quantity.amount++;
                 this.checkouts[index].quantity.ordered--;
            }
-           
-            //console.log(this.checkouts[index].quantity.amount);
         },
         addToCheckout (product) { 
             var exists = this.checkouts.includes(product);
-
+            if(product.quantity.amount == 0) { return; }
             if (!exists) {
                 var temp = product;
                 product.quantity.amount--;
@@ -198,7 +218,7 @@ export default {
                 //console.log(this.checkouts); 
             }
         },
-        search () { 
+        searchJson () { 
             this.products = [];
             this.keyword = this.keyword.replace(/\s+/g, ' ').trim();
             json.filter(product => {
@@ -211,6 +231,35 @@ export default {
             });
             //console.log('search fired up');
         },
+        async search() {
+            const key = this.keyword;
+            const rows = await this.db.select(
+                "SELECT * FROM products WHERE model LIKE '%" + key + "%' OR name LIKE '%" + key + "%' OR barcode LIKE '%" + key + "%' "
+            )
+            this.products = [];
+            rows.forEach(item => {
+                this.products.push(this.putDataInJson(item));
+            });
+            console.log(rows);
+        },
+        putDataInJson(item) {
+            var temp = {
+                "details":{
+                    "barcode": item.barcode,
+                    "name": item.name,
+                    "model": item.model
+                },
+                "price": {
+                    "original": item.price_original,
+                    "sale": item.price_sale
+                },
+                "quantity": {
+                    "amount": item.quantity_amount,
+                    "status": item.quantity_status
+                }
+            }
+            return temp;
+        }
     },
     name: 'CheckoutView',
     components: {

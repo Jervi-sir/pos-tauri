@@ -374,58 +374,67 @@ main {
     }
 }
 
-.popup-layer {
-    position: fixed;
-    background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(2px);
+.popup-container {
+    position: absolute;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
     z-index: 9990;
-}
 
-
-.popup {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 40px;
-    background: #FFFFFF;
-    border-radius: 25px;
-    position: fixed;
-    z-index: 9999;
-    filter: drop-shadow(0px 4px 12px rgba(0, 0, 0, 0.2));
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 400px;
-
-    h2 {
-        font-weight: 700;
-        font-size: 25px;
-        color: #000000;   
+    .popup-layer {
+        position: fixed;
+        background: rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(2px);
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 9990;
     }
 
-    p {
-        font-weight: 400;
-        font-size: 20px;
-        text-align: center;
-        color: #000000;
-    }
 
-    .new-order {
-        background: #313638;
-        border-radius: 10px 10px 20px 20px;
-        text-align: center;
-        width: 100%;
-        font-weight: 500;
-        font-size: 16px;
-        color: #FFFFFF;
-        padding: 15px;
-        border: none;
-        cursor: pointer;
-        text-decoration: none;
+    .popup {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
+        background: #FFFFFF;
+        border-radius: 25px;
+        position: fixed;
+        z-index: 9999;
+        filter: drop-shadow(0px 4px 12px rgba(0, 0, 0, 0.2));
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 400px;
+
+        h2 {
+            font-weight: 700;
+            font-size: 25px;
+            color: #000000;   
+        }
+
+        p {
+            font-weight: 400;
+            font-size: 20px;
+            text-align: center;
+            color: #000000;
+        }
+
+        .new-order {
+            background: #313638;
+            border-radius: 10px 10px 20px 20px;
+            text-align: center;
+            width: 100%;
+            font-weight: 500;
+            font-size: 16px;
+            color: #FFFFFF;
+            padding: 15px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+        }
     }
 }
