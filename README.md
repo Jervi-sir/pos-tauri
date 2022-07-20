@@ -1,4 +1,4 @@
-# pos-tauri
+# pos-tauri-ts
 
 ## Project setup
 ```
