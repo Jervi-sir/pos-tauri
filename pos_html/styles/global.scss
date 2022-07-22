@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+html {
+    box-sizing: border-box;
+}
+
+*, *::after, *::before {
+    box-sizing: inherit;
+}
+
+:root {
+    --ff-primary: 'Inter', sans-serif;
+    --bg-color: #F9F9FB;
+
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    background-color: #F9F9FB;
+    font-family: var(--ff-primary);
+}
+
+.side-menu {
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    padding: 25px;
+    gap: 4rem;
+
+    a {
+        border: 4.66667px solid #EDEDED;
+        border-radius: 15px;
+        width: 76px;
+        height: 76px;
+        text-align: center;
+        align-items: center;
+        display: flex;
+        justify-content: center;
+
+        &.router-link-active {
+            border: 4.66667px solid #414141;
+        }
+    }
+
+    .menu {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+}
+
+
+main {
+    display: flex;
+    justify-content: space-between;
+    flex: 1;
+    padding: 40px;
+    gap: 4rem;
+
+    
+    /*-
+    |---------------------
+    |   Dashboard
+    |---------------------
+    */
+    .dashboard {
+        flex: 1;
+        /*-- Search from --*/
+        .top {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+    
+            .dashboard-title {
+                padding: 0;
+                margin: 0;
+                font-weight: 700;
+                font-size: 30px;
+            }
+    
+            .search-form {
+                flex: 1;
+                display: flex;
+                flex-direction: row;
+                background-color: #ffffff;
+                border-radius: 10px;
+                padding: 10px;
+                input {
+                    margin: 0;
+                    padding: 0;
+                    background-color: transparent;
+                    border: none;
+                    outline: none;
+                    width: 100%;
+    
+                    &::placeholder {
+                        font-family: var(--ff-primary);
+                    }
+                }
+                button {
+                    background-color: transparent;
+                    border: none;
+                }
+            }
+        }
+    }
+
+    
+}
+
