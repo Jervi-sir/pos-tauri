@@ -1,0 +1,6 @@
+{
+    "id": 1,
+    "name": "James Doe",
+    "salary": 100,
+    "years": [2022, 2023, 2024]
+}
