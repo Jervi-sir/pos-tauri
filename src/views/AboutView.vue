@@ -20,6 +20,9 @@
     <input type="text" v-model="addItem.quantity" placeholder="quantity" @keypress="isNumber($event)"><br>
     {{addItem}}
     <br>
+    <h1>console log</h1>
+    {{resultConsole}}
+
   </div>
 </template>
 
@@ -31,6 +34,7 @@ export default ({
   name: "app",
   data() {
     return {
+      resultConsole: [],
       keyword: '',
       addItem: {
         barcode: '',
@@ -46,6 +50,7 @@ export default ({
   },
   async mounted() {
     this.db = await SQLite.open('./database.db');
+    this.resultConsole.push({'db': this.db});
     //const rows = await this.db.select<Array<{ count: number }>>('SELECT * FROM users')
     //console.log(rows);
   },
@@ -56,6 +61,8 @@ export default ({
       const rows = await this.db.select(
         "SELECT * FROM products WHERE model LIKE '%" + key + "%' OR name LIKE '%" + key + "%' OR barcode LIKE '%" + key + "%' "
       )
+      this.resultConsole.push({'db': rows});
+
 
       console.log(rows);
 
@@ -114,12 +121,16 @@ export default ({
       const rows = await this.db.select(
         'SELECT * FROM products'
       )
+      this.resultConsole.push({'db': rows});
+
       console.log(rows);
     },
     async countdb() {
       const rows = await this.db.select(
         'SELECT COUNT(*) as count FROM products'
       )
+      this.resultConsole.push({'db': rows});
+
       console.log(rows);
     },
     

@@ -7,7 +7,7 @@
     "distDir": "Set automatically by Vue CLI plugin"
   },
   "package": {
-    "productName": "pos-tauri-ts",
+    "productName": "taurii",
     "version": "0.1.0"
   },
   "tauri": {
@@ -29,7 +29,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "com.jervi.dev",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
@@ -56,10 +56,10 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 700,
+        "height": 600,
         "resizable": true,
         "title": "pos",
-        "width": 1400
+        "width": 800
       }
     ]
   }
