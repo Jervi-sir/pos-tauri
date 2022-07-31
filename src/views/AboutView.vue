@@ -28,7 +28,9 @@
 
 
 <script>
-import SQLite from 'tauri-plugin-sqlite-api'
+import { createDB, dropDB } from '../functions/initDB'
+import { countProducts, showAll, addProduct, searchDB } from '../functions/database'
+import { acceptNumber } from '../functions/helper'
 
 export default ({
   name: "app",
@@ -45,93 +47,34 @@ export default ({
         quantity: '',
         status: 'oufOfStock',
       },
-      db: '',
     }
-  },
-  async mounted() {
-    this.db = await SQLite.open('./database.db');
-    this.resultConsole.push({'db': this.db});
-    //const rows = await this.db.select<Array<{ count: number }>>('SELECT * FROM users')
-    //console.log(rows);
   },
 
   methods: {
     async searchdb() {
-      const key = this.keyword;
-      const rows = await this.db.select(
-        "SELECT * FROM products WHERE model LIKE '%" + key + "%' OR name LIKE '%" + key + "%' OR barcode LIKE '%" + key + "%' "
-      )
-      this.resultConsole.push({'db': rows});
-
-
-      console.log(rows);
-
+      const search = await searchDB(this.keyword);
+      this.resultConsole.push({'search': search});
     },
     isNumber(evt) {
-      evt = (evt) ? evt : window.event;
-      var charCode = (evt.which) ? evt.which : evt.keyCode;
-      //if ((charCode > 31 && (charCode < 48 || charCode > 57)) && charCode !== 46) {
-      if ((charCode > 31 && (charCode < 48 || charCode > 57))) {
-        evt.preventDefault();
-      } else {
-        return true;
-      }
+      acceptNumber(evt);
     },
     async addProduct() {
-      var item = this.addItem;
-      if(item.quantity > 0) {
-        item.status = "inStock"
-      }
-
-      try {
-        await this.db.execute(
-        'INSERT INTO products VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)', 
-          [item.barcode,
-            item.name,
-            item.model,
-            item.price_original,
-            item.price_sale,
-            item.quantity,
-            item.status]
-        )
-      } catch(err) {
-        console.log(err)
-      }
-      
+      const added = await addProduct(this.addItem);
+      this.resultConsole.push({'added': added});
     },
     async createdb () { 
-      await this.db.execute(`
-        create TABLE if not EXISTS products (
-          barcode text NOT NULL UNIQUE,
-          name TEXT NOT NULL,
-          model text NOT NULL,
-          price_original FLOAT NOT NULL,
-          price_sale FLOAT NOT NULL,
-          quantity_amount INT DEFAULT 0,
-          quantity_status varCHar(10) DEFAULT 'outOfStock'
-        );
-    `) 
+      await createDB();
     },
     async dropdb() {
-      await this.db.execute(`
-        drop TABLE if exists products
-      `)
+      await dropDB();
     },
     async showdb() {
-      const rows = await this.db.select(
-        'SELECT * FROM products'
-      )
-      this.resultConsole.push({'db': rows});
-
-      console.log(rows);
+      const result = await showAll();
+      this.resultConsole.push({'show': result});
     },
     async countdb() {
-      const rows = await this.db.select(
-        'SELECT COUNT(*) as count FROM products'
-      )
-      this.resultConsole.push({'db': rows});
-
-      console.log(rows);
+      const total = await countProducts();
+      this.resultConsole.push({'count': total});
     },
     
   },

@@ -20,25 +20,25 @@
                 <div class="items" >
                     <div class="card"  v-for="(product, index) in products" :key="index" @click="addToCheckout(product)">
                          <div class="sale-price">
-                            <span>{{ product.price.sale }}</span>
+                            <span>{{ product.price_sale }}</span>
                         </div>
                         <div class="product-quantity">
-                            <div class="amount outOfStock" :class="{ inStock: product.quantity.amount >= 1 }">
-                                <span>{{ product.quantity.amount }}</span>
+                            <div class="amount outOfStock" :class="{ inStock: product.qtn_amount >= 1 }">
+                                <span>{{ product.qtn_amount }}</span>
                             </div>
-                            <div class="status outOfStock" :class="{ inStock: product.quantity.amount >= 1 }">
-                                <span>{{ product.quantity.status }}</span>
+                            <div class="status outOfStock" :class="{ inStock: product.qtn_amount >= 1 }">
+                                <span>{{ product.qtn_status }}</span>
                             </div>
                         </div>
                         <div class="original-price">
                             <div class="price-bordered">
-                                <span>{{ product.price.original }}</span>
+                                <span>{{ product.price_original }}</span>
                             </div>
                         </div>
                         <div class="product-name">
-                            <span class="barcode">{{ product.details.barcode }}</span>
-                            <span class="item-title">{{ product.details.name }}</span>
-                            <span class="item-model">{{ product.details.model }}</span>
+                            <span class="barcode">{{ product.barcode }}</span>
+                            <span class="item-title">{{ product.name }}</span>
+                            <span class="item-model">{{ product.model }}</span>
                         </div>
                     </div>
                 </div>
@@ -46,18 +46,18 @@
         </div>  
         <div class="checkout">
             <div class="top">
-                <h4 class="date">Friday, 08 July 2022</h4>
+                <h4 class="date">{{ date }}</h4>
                 <h2>Checkout</h2>
                 <div class="items">
                     <div class="card" v-for="(item, index) in checkouts" :key="index">
-                        <div class="title">{{ item.details.name }}</div>
+                        <div class="title">{{ item.name }}</div>
                         <div class="row">
-                            <div class="price">{{ item.price.sale }}</div>
+                            <div class="price">{{ item.price_sale }}</div>
                             <div class="quantity-selector">
                                 <button @click="deleteFromCheckout(index)">del</button>
                                 <button @click="removeQtn(index)"> - </button>
                                 <div class="input-amount">
-                                    <input type="number" :value="item.quantity.ordered" min="1" :max="item.quantity.amount">
+                                    <input type="number" :value="item.qtn_ordered" min="1" :max="item.qtn_amount">
                                 </div>
                                 <button @click="addQtn(index)"> + </button>
                             </div>
@@ -106,13 +106,12 @@
 
 <script>
 // @ is an alias to /src
-import SQLite from 'tauri-plugin-sqlite-api'
-import json from '../../public/database.json'
-import { priceFormat, calSale, calOriginal } from '../functions/helper'
+import { priceFormat, calSale, calOriginal, wrapDataInJson, todayDate } from '../functions/helper'
+import { showAll, updateQtn, searchDB } from '../functions/database';
 export default {
     data () {
         return {
-            db: '',
+            date: 'Friday, 08 July 2022',
             keyword: '',
             products: [],
             checkouts: [],
@@ -127,33 +126,16 @@ export default {
         }
     },
     async mounted() {
-        this.db = await SQLite.open('./database.db');
-        const rows = await this.db.select(
-            'SELECT * FROM products'
-        )
+        const rows = await showAll();
         rows.forEach(item => {
-            var temp = {
-                "details":{
-                    "barcode": item.barcode,
-                    "name": item.name,
-                    "model": item.model
-                },
-                "price": {
-                    "original": item.price_original,
-                    "sale": item.price_sale
-                },
-                "quantity": {
-                    "amount": item.quantity_amount,
-                    "status": item.quantity_status
-                }
-            }
-            this.products.push(temp);
+            this.products.push(wrapDataInJson(item));
         });
+        this.date = todayDate();
+        
     },
     watch: {
         checkouts: {
-            // eslint-disable-next-line
-            handler(newValue){
+            handler(){
                 this.pay.original = this.calOriginal()
                 this.pay.sale = this.calSale()
                 this.pay.gained = this.pay.sale - this.pay.original;
@@ -169,13 +151,10 @@ export default {
             this.checkouts.forEach( item => {
                 this.getData(item).then(result => {console.log(result)})
             })
-            //this.popup.payment = true;
+            this.popup.payment = true;
         },
         async getData(item) {
-            const row = await this.db.select(
-                'UPDATE products SET quantity_amount = (?1) WHERE barcode = (?2)',
-                [item.quantity.amount, item.details.barcode]
-                )
+            const row = await updateQtn(item.qtn_amount, item.barcode);
             return row;
         },
         priceFormat(price) {
@@ -187,79 +166,47 @@ export default {
         calOriginal () { 
             return calOriginal(this.checkouts) ;
         },
-        deleteFromCheckout (index) { 
-            this.checkouts[index].quantity.amount += this.checkouts[index].quantity.ordered;
-            this.checkouts.pop(index);
-        },
         addQtn(index) { 
-           var available = this.checkouts[index].quantity.amount;
+           var available = this.checkouts[index].qtn_amount;
            if(available != 0) {
-                this.checkouts[index].quantity.amount--;
-                this.checkouts[index].quantity.ordered++;
+                this.checkouts[index].qtn_amount--;
+                this.checkouts[index].qtn_ordered++;
            }
         },
         removeQtn(index) { 
-           var available = this.checkouts[index].quantity.amount;
-           var maxQtb = this.checkouts[index].quantity.maxQtb;
+           var available = this.checkouts[index].qtn_amount;
+           var maxQtb = this.checkouts[index].qtn_maxQtb;
            if(available != maxQtb) {
-                this.checkouts[index].quantity.amount++;
-                this.checkouts[index].quantity.ordered--;
+                this.checkouts[index].qtn_amount++;
+                this.checkouts[index].qtn_ordered--;
            }
         },
         addToCheckout (product) { 
             var exists = this.checkouts.includes(product);
-            if(product.quantity.amount == 0) { return; }
+            if(product.qtn_amount == 0) { return; }
             if (!exists) {
                 var temp = product;
-                product.quantity.amount--;
-                temp.quantity.ordered = 1;
-                temp.quantity.maxQtb = product.quantity.amount;
+                product.qtn_amount--;
+                temp.qtn_ordered = 1;
+                temp.qtn_maxQtb = product.qtn_amount;
                 this.checkouts.push(temp);
                 //console.log(this.checkouts); 
             }
         },
-        searchJson () { 
-            this.products = [];
-            this.keyword = this.keyword.replace(/\s+/g, ' ').trim();
-            json.filter(product => {
-                var found = product.details.barcode.toLowerCase().includes(this.keyword.toLowerCase()) ||
-                            product.details.name.toLowerCase().includes(this.keyword.toLowerCase()) ||
-                            product.details.model.toLowerCase().includes(this.keyword.toLowerCase()) ;
-                if(found) {
-                    this.products.push(product)
-                }
-            });
-            //console.log('search fired up');
+        deleteFromCheckout (index) { 
+            this.checkouts[index].qtn_amount += this.checkouts[index].qtn_ordered;
+            this.checkouts.pop(index);
         },
+        
         async search() {
             const key = this.keyword;
-            const rows = await this.db.select(
-                "SELECT * FROM products WHERE model LIKE '%" + key + "%' OR name LIKE '%" + key + "%' OR barcode LIKE '%" + key + "%' "
-            )
+            const rows = await searchDB(key);
             this.products = [];
             rows.forEach(item => {
-                this.products.push(this.putDataInJson(item));
+                this.products.push(wrapDataInJson(item));
             });
-            console.log(rows);
         },
-        putDataInJson(item) {
-            var temp = {
-                "details":{
-                    "barcode": item.barcode,
-                    "name": item.name,
-                    "model": item.model
-                },
-                "price": {
-                    "original": item.price_original,
-                    "sale": item.price_sale
-                },
-                "quantity": {
-                    "amount": item.quantity_amount,
-                    "status": item.quantity_status
-                }
-            }
-            return temp;
-        }
+
     },
     name: 'CheckoutView',
     components: {
